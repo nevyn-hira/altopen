@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+from wmctrl import Window
+import subprocess
+import configparser
+import sys
+import pyperclip
+import magic
+import getopt
+import os
+import textwrap
+
+
+def print_help():
+    helptext = """\
+Usage:
+    getopt -c <config_file>
+
+Configuration file has to have:
+
+    [system]
+    filebrowserclass = caja.Caja
+
+If you don't know your file browser's wm_class, open up your file browser and run wmctrl -lx in a terminal.
+
+If you need to find the mime type for a file, use file in the terminal. i.e.
+file --mime-encoding test.png.
+
+Your configuration should have a [mimetypes] section with mimetype=application pairs. The application HAS to be installed properly with a desktop file in /usr/share/applications to work.
+
+By default, your config file should be in ~/.altopen BUT you can specify your configuration file on the command line. This means you could have unlimited mime/application associations assigned to different keys.\
+"""
+    print("\n\n"+helptext+"\n\n")
+
+def main( argv ):
+    configfile = os.path.join(os.path.expanduser("~"),'.altopen')
+    try:
+        opts, args = getopt.getopt(argv,"h:c:l",["help","configfile=","loud"])
+    except getopt.GetoptError:
+        print_help()
+        sys.exit(1)
+    for opt, arg in opts:
+        if opt in [ '-h', "--help" ]:
+            print_help()
+            sys.exit(0)
+        elif opt in ( "-c", "--configfile" ):
+            configfile = arg
+
+    if not os.path.exists(configfile):
+        print("Configuration File Not Found")
+        sys.exit(1)
+    else:
+        config = configparser.ConfigParser()
+        config.read(configfile)
+        if 'system' in config:
+            if 'filebrowserclass' in config['system']:
+                filebrowserclass = config['system']['filebrowserclass']
+            else:
+                print("filebrowserclass not found\n\n")
+                print_help()
+                sys.exit(2)
+        else:
+            print("system section not defined in configuration file\n\n")
+            print_help()
+            sys.exit(2)
+
+        if Window.get_active().wm_class == filebrowserclass:
+            subprocess.call(['xdotool','key','ctrl+c'])
+            files = pyperclip.paste().split()
+            for file in files:
+                mimetype = magic.from_file(file,mime=True)
+                if mimetype in config['mimetypes']:
+                    subprocess.call(['gtk-launch',config['mimetypes'][mimetype],file])
+                else:
+                    subprocess.call(['notify-send',mimetype])
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])
+    else:
+        main([])

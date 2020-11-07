@@ -1,0 +1,62 @@
+# License
+
+Copyright 2019 Nilesh "Nevyn" Hira
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Nevyn Hira (nevynh@gmail.com)
+
+# Altopen
+
+## What does it do?
+I realized that I was spending an annoying amount of time opening files in the right program. While opening up images in a viewer is the right default action (relatively low resources and quick to go through a bunch of images), a lot of the time I'm trying to open them to edit. Which requires me to right click, go to "Open With" and find the program that I use most for whatever file type from an alphabetical list.
+
+It was driving me nuts so I figured I'd write something to address this (to go with my [macrokeyboard project](https://bitbucket.org/NevynHira/macrokeyboard/src/master/) BUT it runs perfectly fine as a shortcut key. It's been built that way).
+
+## Dependencies
+* xdotool
+* pyperclip
+* python 3
+
+## Configuration
+By default altopen looks for ~/.altopen BUT can have a configuration specified on the command line (`altopen -c configfile`). It looks like the following:
+
+    [system]
+    filebrowserclass = caja.Caja
+
+    [mimetypes]
+    image/png=gimp.desktop
+    image/jpeg=gimp
+    image/svg+xml=inkscape
+
+To find the file browser class, use wmctrl at the command line. i.e.
+
+    wmctrl -lx
+
+Should give you output similar to the following:
+
+    0x01000ee9  0 caja.Caja             nevyn-desktop Downloads    
+    0x02e00007  0 mate-terminal.Mate-terminal  nevyn-desktop Terminal
+    0x04800001  0 code.Code             nevyn-desktop altopen.example - altopen - Visual Studio Code
+    0x03600003  0 Navigator.Firefox     nevyn-desktop License - Mozilla Firefox
+  
+The third column contains the classname. If you're not sure what filebrowser you're using, go to your file browser and hit "Alt+F a" to bring up the about screen.
+
+If you're unsure of mimetypes, go to the terminal and type in:
+
+    file --mime-type <file>
+    
+Where file is the file you need to find the mime type for.
+
+The executable is passed to gtk-launch so can omit the .desktop part BUT must be a desktop file in `/usr/share/applications`
